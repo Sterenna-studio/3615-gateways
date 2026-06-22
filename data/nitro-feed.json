@@ -1,0 +1,60 @@
+{
+  "version": 1,
+  "updatedAt": "2026-06-22T00:00:00Z",
+  "network": {
+    "name": "Gwen Ha Star",
+    "domain": "nitro.sterenna.fr",
+    "status": "experimental",
+    "summary": "Hub Nitro / Sterenna adapte en version terminal pour 3615 Gateways."
+  },
+  "agent": {
+    "displayName": "MutenRock",
+    "rank": "Agent des Chronicles",
+    "crew": "BZH Chronicles",
+    "status": "synchronisation locale",
+    "visibility": "demo"
+  },
+  "apps": [
+    {
+      "id": "bzh-chronicles",
+      "name": "BZH Chronicles",
+      "status": "draft",
+      "terminalLabel": "Lore / signaux / jukebox"
+    },
+    {
+      "id": "tcg",
+      "name": "TCG / Power Your Hand",
+      "status": "draft",
+      "terminalLabel": "Cartes / collection / deck"
+    },
+    {
+      "id": "jukebox",
+      "name": "Jukebox / Chronicles FM",
+      "status": "online-web",
+      "terminalLabel": "Stations / playlists texte"
+    },
+    {
+      "id": "botanica",
+      "name": "Botanica",
+      "status": "planned-terminal",
+      "terminalLabel": "Index nature / notes"
+    },
+    {
+      "id": "goetia",
+      "name": "Goetia",
+      "status": "planned-terminal",
+      "terminalLabel": "Demon mapping / fiches"
+    }
+  ],
+  "signals": [
+    "Nitro terminal bridge active.",
+    "3615 Gateways connecte le Minitel a Zyra.",
+    "Les donnees personnelles restent desactivees en MVP.",
+    "Prochaine etape: feed dynamique depuis Nitro."
+  ],
+  "links": {
+    "publicPage": "https://nitro.sterenna.fr/minitel/",
+    "websocket": "wss://nitro.sterenna.fr/minitel/ws",
+    "telnet": "nitro.sterenna.fr:3615"
+  }
+}
