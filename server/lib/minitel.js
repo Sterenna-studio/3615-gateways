@@ -29,6 +29,7 @@ export function renderMainMenu(config = {}) {
     '  [4] ARCADE',
     '  [5] TERMINAL TEST',
     '  [6] INFOS SYSTEME',
+    '  [7] GWEN HA STAR / NITRO',
     '',
     '  [0] RAFRAICHIR',
     '',
