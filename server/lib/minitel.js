@@ -30,6 +30,7 @@ export function renderMainMenu(config = {}) {
     '  [5] TERMINAL TEST',
     '  [6] INFOS SYSTEME',
     '  [7] GWEN HA STAR / NITRO',
+    '  [8] AVATAR / LEMEGETON',
     '',
     '  [?] AIDE',
     '  [0] ACCUEIL / RAFRAICHIR',
@@ -39,6 +40,12 @@ export function renderMainMenu(config = {}) {
 }
 
 export function renderHelp(config = {}, section = 'main') {
+  const context = section === 'gwen'
+    ? 'Dans Gwen: 1,2,3,4 = 71,72,73,74'
+    : section === 'avatar'
+      ? 'Dans Avatar: 1,2,3,4 = 81,82,83,84'
+      : 'Depuis accueil: tape un numero.';
+
   return frame([
     ...renderHeader(config),
     '',
@@ -49,9 +56,7 @@ export function renderHelp(config = {}, section = 'main') {
     '  ? ou AIDE : cette page',
     '  ENTREE    : retour contextuel',
     '',
-    section === 'gwen'
-      ? 'Dans Gwen: 1,2,3,4 = 71,72,73,74'
-      : 'Depuis accueil: tape un numero.',
+    context,
     '',
     'Le serveur ne lance aucune commande',
     'systeme depuis le Minitel.',
@@ -113,7 +118,7 @@ export function renderPlaceholder(title, config = {}) {
   ]);
 }
 
-export function renderSystemInfo({ name, node, publicOrigin, wsPath, telnetPort, clients, telnetClients, nitroFeedVersion } = {}) {
+export function renderSystemInfo({ name, node, publicOrigin, wsPath, telnetPort, clients, telnetClients, nitroFeedVersion, avatarStateVersion } = {}) {
   return frame([
     ...renderHeader({ name, node }),
     '',
@@ -125,6 +130,7 @@ export function renderSystemInfo({ name, node, publicOrigin, wsPath, telnetPort,
     `CLIENTS WS  : ${clients ?? 0}`,
     `CLIENTS TEL : ${telnetClients ?? 0}`,
     `NITRO FEED  : v${nitroFeedVersion ?? 'n/a'}`,
+    `AVATAR      : v${avatarStateVersion ?? 'n/a'}`,
     '',
     'Aucune commande systeme exposee.',
     '',
