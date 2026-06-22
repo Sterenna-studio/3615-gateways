@@ -27,7 +27,7 @@ telnet nitro.sterenna.fr 3615
 
 ## Project status
 
-Early MVP skeleton, now with stateful terminal navigation and a local Nitro terminal feed.
+Early MVP skeleton, now with stateful terminal navigation, a local Nitro terminal feed, and a first Avatar / Lemegeton terminal module.
 
 Current objective:
 
@@ -35,7 +35,8 @@ Current objective:
 2. connect the Minitel through the ESP32 using iodeo Telnet Pro;
 3. display a stable 3615 Gateways menu;
 4. expose Gwen Ha Star as a terminal-native section;
-5. add services one by one: BBS, IA, Arcade, Terminal, BZH Chronicles.
+5. expose the Avatar / Lemegeton state as a terminal-native section;
+6. add services one by one: BBS, IA, Arcade, Terminal, BZH Chronicles.
 
 ## Current MVP features
 
@@ -46,11 +47,13 @@ Current objective:
 - Stateful session per Telnet/WebSocket client
 - Main 3615 Gateways menu
 - Gwen Ha Star / Nitro terminal section
+- Avatar / Lemegeton terminal section
 - Local terminal-safe Nitro feed
-- Feed validation and normalization
+- Local terminal-safe avatar state feed
+- Feed/state validation and normalization
 - Runtime stats for WS/Telnet clients
 - Basic security boundary: no system command execution
-- Node.js tests for router and feed logic
+- Node.js tests for router and feed/state logic
 ```
 
 ## Repository layout
@@ -58,11 +61,14 @@ Current objective:
 ```txt
 3615-gateways/
 ├── data/
+│   ├── avatar-state.json       # Terminal-safe avatar state / expression data
 │   └── nitro-feed.json         # Terminal-safe Gwen Ha Star / Nitro data
 │
 ├── server/                     # Node.js MVP server for Zyra
 │   ├── index.js                # HTTP + WebSocket + Telnet entrypoint
 │   └── lib/
+│       ├── avatar.js           # Avatar / Lemegeton terminal screens
+│       ├── avatar-state.js     # Avatar state loader / normalizer
 │       ├── gwen-ha-star.js     # Gwen Ha Star terminal screens
 │       ├── minitel.js          # Minitel text rendering helpers
 │       ├── nitro-feed.js       # Feed loader / validator / normalizer
@@ -73,12 +79,14 @@ Current objective:
 │
 ├── docs/
 │   ├── ARCHITECTURE.md
+│   ├── AVATAR_VDT_RESEARCH.md
 │   ├── GWEN_HA_STAR_MINITEL.md
 │   ├── SETUP_ZYRA_POPOS.md
 │   ├── NITRO_INTEGRATION.md
 │   └── SECURITY.md
 │
 ├── tests/
+│   ├── avatar-state.test.js
 │   ├── nitro-feed.test.js
 │   └── router.test.js
 │
@@ -110,6 +118,7 @@ Default local endpoints:
 HTTP status:       http://localhost:8080/
 Status detail:     http://localhost:8080/minitel/status
 Nitro feed:        http://localhost:8080/minitel/nitro-feed
+Avatar state:      http://localhost:8080/minitel/avatar-state
 WebSocket:         ws://localhost:8080/minitel/ws
 Telnet:            localhost:3615
 ```
@@ -138,6 +147,7 @@ Main menu:
 [5] TERMINAL TEST
 [6] INFOS SYSTEME
 [7] GWEN HA STAR / NITRO
+[8] AVATAR / LEMEGETON
 [?] AIDE
 [0] ACCUEIL / RAFRAICHIR
 ```
@@ -151,7 +161,21 @@ Inside Gwen Ha Star:
 [74] SIGNAL DU RESEAU
 ```
 
-The router is contextual: once inside Gwen Ha Star, `1`, `2`, `3`, `4` are interpreted as `71`, `72`, `73`, `74`.
+Inside Avatar / Lemegeton:
+
+```txt
+[81] ETAT AVATAR
+[82] EXPRESSIONS
+[83] PIPELINE VDT
+[84] TEST YEUX/BOUCHE
+```
+
+The router is contextual:
+
+```txt
+Inside Gwen Ha Star:      1,2,3,4 -> 71,72,73,74
+Inside Avatar/Lemegeton:  1,2,3,4 -> 81,82,83,84
+```
 
 ## ESP32 / Telnet Pro preset
 
@@ -204,6 +228,8 @@ wss://nitro.sterenna.fr/minitel/ws
 telnet nitro.sterenna.fr 3615
   = retro terminal / BBS entrypoint
 ```
+
+For avatar rendering, do not convert video frames directly to the Minitel. Use terminal-native state + small display updates.
 
 ## Security principle
 
