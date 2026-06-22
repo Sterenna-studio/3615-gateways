@@ -11,6 +11,13 @@ import {
   renderServerMessage,
   renderSystemInfo,
 } from './lib/minitel.js';
+import {
+  renderGwenHaStarAgent,
+  renderGwenHaStarApps,
+  renderGwenHaStarCockpit,
+  renderGwenHaStarHome,
+  renderGwenHaStarSignal,
+} from './lib/gwen-ha-star.js';
 
 const config = {
   httpHost: process.env.HTTP_HOST || '0.0.0.0',
@@ -128,7 +135,8 @@ const telnetServer = net.createServer((socket) => {
 });
 
 function routeChoice(input) {
-  const choice = String(input).slice(-1);
+  const digits = String(input).replace(/\D/g, '');
+  const choice = digits || String(input).slice(-1);
 
   switch (choice) {
     case '0':
@@ -148,6 +156,16 @@ function routeChoice(input) {
         ...config,
         clients: wsClients.size,
       });
+    case '7':
+      return renderGwenHaStarHome(config);
+    case '71':
+      return renderGwenHaStarAgent(config);
+    case '72':
+      return renderGwenHaStarCockpit(config);
+    case '73':
+      return renderGwenHaStarApps(config);
+    case '74':
+      return renderGwenHaStarSignal(config);
     default:
       return renderMainMenu(config);
   }
