@@ -3,22 +3,9 @@ import express from 'express';
 import http from 'node:http';
 import net from 'node:net';
 import { WebSocketServer } from 'ws';
-import {
-  clearScreen,
-  renderBzhChronicles,
-  renderMainMenu,
-  renderPlaceholder,
-  renderServerMessage,
-  renderSystemInfo,
-} from './lib/minitel.js';
-import {
-  renderGwenHaStarAgent,
-  renderGwenHaStarApps,
-  renderGwenHaStarCockpit,
-  renderGwenHaStarHome,
-  renderGwenHaStarSignal,
-} from './lib/gwen-ha-star.js';
+import { clearScreen, renderMainMenu } from './lib/minitel.js';
 import { loadNitroFeed } from './lib/nitro-feed.js';
+import { createSession, routeTerminalInput } from './lib/router.js';
 
 const config = {
   httpHost: process.env.HTTP_HOST || '0.0.0.0',
@@ -37,6 +24,7 @@ const app = express();
 const server = http.createServer(app);
 const wss = new WebSocketServer({ noServer: true });
 const wsClients = new Set();
+const telnetClients = new Set();
 
 app.disable('x-powered-by');
 
@@ -49,7 +37,7 @@ app.get('/', (_req, res) => {
     websocket: config.wsPath,
     telnetPort: config.telnetPort,
     nitroFeedVersion: nitroFeed.version,
-    wsClients: wsClients.size,
+    ...getRuntimeStats(),
   });
 });
 
@@ -61,7 +49,7 @@ app.get('/minitel/status', (_req, res) => {
     mode: 'mvp',
     transports: ['telnet', 'websocket', 'http'],
     nitroFeedVersion: nitroFeed.version,
-    wsClients: wsClients.size,
+    ...getRuntimeStats(),
   });
 });
 
@@ -92,6 +80,7 @@ server.on('upgrade', (request, socket, head) => {
 });
 
 wss.on('connection', (ws, request) => {
+  const session = createSession();
   wsClients.add(ws);
   const remote = request.socket.remoteAddress || 'unknown';
   console.log(`[ws] connected ${remote}`);
@@ -101,6 +90,7 @@ wss.on('connection', (ws, request) => {
     service: config.name,
     node: config.node,
     menu: renderMainMenu(config),
+    session,
     nitroFeedVersion: nitroFeed.version,
   }));
 
@@ -108,10 +98,19 @@ wss.on('connection', (ws, request) => {
     const message = payload.toString().trim();
     console.log(`[ws] ${remote}: ${message}`);
 
+    const result = routeTerminalInput(message, {
+      config,
+      feed: nitroFeed,
+      stats: getRuntimeStats(),
+      session,
+    });
+
     ws.send(JSON.stringify({
-      type: 'echo',
+      type: 'screen',
       received: message,
-      response: routeChoice(message),
+      choice: result.choice,
+      section: result.section,
+      response: result.screen,
     }));
   });
 
@@ -122,6 +121,8 @@ wss.on('connection', (ws, request) => {
 });
 
 const telnetServer = net.createServer((socket) => {
+  const session = createSession();
+  telnetClients.add(socket);
   socket.setEncoding('utf8');
   socket.write(clearScreen());
   socket.write(renderMainMenu(config));
@@ -132,55 +133,29 @@ const telnetServer = net.createServer((socket) => {
   socket.on('data', (data) => {
     const input = data.toString().replace(/[\r\n]/g, '').trim();
 
-    if (!input) {
-      socket.write(clearScreen());
-      socket.write(renderMainMenu(config));
-      return;
-    }
+    const result = routeTerminalInput(input, {
+      config,
+      feed: nitroFeed,
+      stats: getRuntimeStats(),
+      session,
+    });
 
     socket.write(clearScreen());
-    socket.write(routeChoice(input));
+    socket.write(result.screen);
   });
 
-  socket.on('close', () => console.log(`[telnet] disconnected ${remote}`));
+  socket.on('close', () => {
+    telnetClients.delete(socket);
+    console.log(`[telnet] disconnected ${remote}`);
+  });
   socket.on('error', (err) => console.warn(`[telnet] ${remote} error: ${err.message}`));
 });
 
-function routeChoice(input) {
-  const digits = String(input).replace(/\D/g, '');
-  const choice = digits || String(input).slice(-1);
-
-  switch (choice) {
-    case '0':
-      return renderMainMenu(config);
-    case '1':
-      return renderServerMessage(config);
-    case '2':
-      return renderBzhChronicles(config);
-    case '3':
-      return renderPlaceholder('BBS / Retro Services', config);
-    case '4':
-      return renderPlaceholder('Arcade', config);
-    case '5':
-      return renderPlaceholder('Terminal Test', config);
-    case '6':
-      return renderSystemInfo({
-        ...config,
-        clients: wsClients.size,
-      });
-    case '7':
-      return renderGwenHaStarHome(config, nitroFeed);
-    case '71':
-      return renderGwenHaStarAgent(config, nitroFeed);
-    case '72':
-      return renderGwenHaStarCockpit(config, nitroFeed);
-    case '73':
-      return renderGwenHaStarApps(config, nitroFeed);
-    case '74':
-      return renderGwenHaStarSignal(config, nitroFeed);
-    default:
-      return renderMainMenu(config);
-  }
+function getRuntimeStats() {
+  return {
+    wsClients: wsClients.size,
+    telnetClients: telnetClients.size,
+  };
 }
 
 server.listen(config.httpPort, config.httpHost, () => {
@@ -199,6 +174,7 @@ process.on('SIGTERM', shutdown);
 function shutdown() {
   console.log('\n[system] shutting down 3615 Gateways');
   for (const ws of wsClients) ws.close();
+  for (const socket of telnetClients) socket.destroy();
   telnetServer.close();
   server.close(() => process.exit(0));
 }
