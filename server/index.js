@@ -5,6 +5,7 @@ import net from 'node:net';
 import { WebSocketServer } from 'ws';
 import { clearScreen, renderMainMenu } from './lib/minitel.js';
 import { loadNitroFeed } from './lib/nitro-feed.js';
+import { loadAvatarState } from './lib/avatar-state.js';
 import { createSession, routeTerminalInput } from './lib/router.js';
 
 const config = {
@@ -20,6 +21,7 @@ const config = {
 };
 
 const nitroFeed = loadNitroFeed();
+const avatarState = loadAvatarState();
 const app = express();
 const server = http.createServer(app);
 const wss = new WebSocketServer({ noServer: true });
@@ -37,6 +39,7 @@ app.get('/', (_req, res) => {
     websocket: config.wsPath,
     telnetPort: config.telnetPort,
     nitroFeedVersion: nitroFeed.version,
+    avatarStateVersion: avatarState.version,
     ...getRuntimeStats(),
   });
 });
@@ -49,6 +52,7 @@ app.get('/minitel/status', (_req, res) => {
     mode: 'mvp',
     transports: ['telnet', 'websocket', 'http'],
     nitroFeedVersion: nitroFeed.version,
+    avatarStateVersion: avatarState.version,
     ...getRuntimeStats(),
   });
 });
@@ -57,6 +61,13 @@ app.get('/minitel/nitro-feed', (_req, res) => {
   res.json({
     ok: true,
     feed: nitroFeed,
+  });
+});
+
+app.get('/minitel/avatar-state', (_req, res) => {
+  res.json({
+    ok: true,
+    state: avatarState,
   });
 });
 
@@ -92,6 +103,7 @@ wss.on('connection', (ws, request) => {
     menu: renderMainMenu(config),
     session,
     nitroFeedVersion: nitroFeed.version,
+    avatarStateVersion: avatarState.version,
   }));
 
   ws.on('message', (payload) => {
@@ -101,6 +113,7 @@ wss.on('connection', (ws, request) => {
     const result = routeTerminalInput(message, {
       config,
       feed: nitroFeed,
+      avatarState,
       stats: getRuntimeStats(),
       session,
     });
@@ -136,6 +149,7 @@ const telnetServer = net.createServer((socket) => {
     const result = routeTerminalInput(input, {
       config,
       feed: nitroFeed,
+      avatarState,
       stats: getRuntimeStats(),
       session,
     });
@@ -162,6 +176,7 @@ server.listen(config.httpPort, config.httpHost, () => {
   console.log(`[http] ${config.name} listening on http://${config.httpHost}:${config.httpPort}`);
   console.log(`[ws] path ${config.wsPath}`);
   console.log(`[nitro-feed] version ${nitroFeed.version ?? 'n/a'}`);
+  console.log(`[avatar-state] version ${avatarState.version ?? 'n/a'}`);
 });
 
 telnetServer.listen(config.telnetPort, config.telnetHost, () => {
