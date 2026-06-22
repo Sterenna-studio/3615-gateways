@@ -126,7 +126,7 @@ function mouthGlyph(mouth) {
     case 'small': return '.--.';
     case 'medium': return '.==.';
     case 'wide': return '.OO.';
-    case 'smile': return '\__/';
+    case 'smile': return '\\__/';
     case 'flat': return '----';
     default: return '....';
   }
