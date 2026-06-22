@@ -13,7 +13,7 @@ Gwen Ha Star web app
 
 ## Current MVP
 
-The main 3615 Gateways menu now exposes:
+The main 3615 Gateways menu exposes:
 
 ```txt
 [7] GWEN HA STAR / NITRO
@@ -28,7 +28,41 @@ Inside that section:
 [74] SIGNAL DU RESEAU
 ```
 
-These are static text screens for now.
+These screens are now rendered from the local terminal-safe feed:
+
+```txt
+data/nitro-feed.json
+```
+
+The server exposes this feed as read-only JSON:
+
+```txt
+GET /minitel/nitro-feed
+```
+
+## Feed shape
+
+The MVP feed contains:
+
+```json
+{
+  "network": {
+    "name": "Gwen Ha Star",
+    "domain": "nitro.sterenna.fr",
+    "status": "experimental"
+  },
+  "agent": {
+    "displayName": "MutenRock",
+    "rank": "Agent des Chronicles",
+    "crew": "BZH Chronicles"
+  },
+  "apps": [],
+  "signals": [],
+  "links": {}
+}
+```
+
+Only safe, curated fields should be added here.
 
 ## Why this approach
 
@@ -50,27 +84,13 @@ The adapted version must behave like a real Minitel service, not like a downgrad
 Later, Gwen Ha Star can expose terminal-safe data through a small JSON source, for example:
 
 ```txt
-/nitro-terminal/feed.json
+https://nitro.sterenna.fr/nitro-terminal/feed.json
 ```
 
-The gateway would then render selected fields only:
+The gateway can then import that feed or sync it locally into:
 
-```json
-{
-  "agent": {
-    "displayName": "MutenRock",
-    "rank": "Agent des Chronicles",
-    "crew": "BZH Chronicles"
-  },
-  "apps": [
-    { "name": "BZH Chronicles", "status": "online" },
-    { "name": "TCG", "status": "draft" }
-  ],
-  "signals": [
-    "Nitro sync active",
-    "New Chronicles module soon"
-  ]
-}
+```txt
+data/nitro-feed.json
 ```
 
 ## Security boundary
@@ -89,6 +109,6 @@ Safer future options:
 
 1. Add per-client navigation state, so `1`, `2`, `3` can mean different things inside Gwen Ha Star.
 2. Add real Minitel Videotex control sequences.
-3. Add terminal-safe JSON import from a local file or HTTP endpoint.
+3. Add remote feed sync from Nitro.
 4. Add read-only Nitro status endpoint.
 5. Add device authentication before personal account data.
