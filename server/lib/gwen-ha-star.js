@@ -1,15 +1,18 @@
 import { frame, renderHeader } from './minitel.js';
 
-export function renderGwenHaStarHome(config = {}) {
+export function renderGwenHaStarHome(config = {}, feed = {}) {
+  const network = feed.network || {};
+
   return frame([
     ...renderHeader(config),
     '',
     'GWEN HA STAR / NITRO',
     '',
-    'Version Minitel adaptee du portail',
-    'Gwen Ha Star. Ici, on ne charge pas le',
-    'site web moderne: on le traduit en pages',
-    'courtes, lisibles et navigables.',
+    line(`RESEAU : ${network.name || 'Gwen Ha Star'}`),
+    line(`DOMAINE: ${network.domain || 'nitro.sterenna.fr'}`),
+    line(`STATUT : ${network.status || 'experimental'}`),
+    '',
+    ...wrap(network.summary || 'Version Minitel adaptee du portail Gwen Ha Star.', 40),
     '',
     '  [71] CARTE AGENT / CIG',
     '  [72] STAR COCKPIT',
@@ -22,29 +25,32 @@ export function renderGwenHaStarHome(config = {}) {
   ]);
 }
 
-export function renderGwenHaStarAgent(config = {}) {
+export function renderGwenHaStarAgent(config = {}, feed = {}) {
+  const agent = feed.agent || {};
+
   return frame([
     ...renderHeader(config),
     '',
     'CARTE AGENT / CIG',
     '',
-    'Acces futur a une version texte de la',
-    'Carte d Identification Galactique.',
+    line(`NOM  : ${agent.displayName || 'Agent inconnu'}`),
+    line(`RANG : ${agent.rank || 'Non synchronise'}`),
+    line(`CREW : ${agent.crew || 'Aucun crew'}`),
+    line(`ETAT : ${agent.status || 'offline'}`),
     '',
-    'Objectif:',
-    '- pseudo agent',
-    '- rang Nitro',
-    '- crew / faction',
-    '- statut de synchronisation',
+    'VISIBILITE',
+    line(agent.visibility || 'demo'),
     '',
-    'Note: aucune session Supabase n est lue',
-    'pour le moment depuis le Minitel.',
+    'Note: aucune session Supabase privee',
+    'n est lue depuis le Minitel en MVP.',
     '',
     'Tape 7 pour revenir au portail Gwen.',
   ]);
 }
 
-export function renderGwenHaStarCockpit(config = {}) {
+export function renderGwenHaStarCockpit(config = {}, feed = {}) {
+  const links = feed.links || {};
+
   return frame([
     ...renderHeader(config),
     '',
@@ -52,31 +58,36 @@ export function renderGwenHaStarCockpit(config = {}) {
     '',
     'Adaptation texte du cockpit /star/.',
     '',
-    'Modules candidats:',
-    '- statut agent',
+    'POINTS D ACCES',
+    line(`WEB : ${links.publicPage || 'nitro/minitel'}`),
+    line(`WS  : ${links.websocket || 'local ws'}`),
+    line(`TEL : ${links.telnet || 'local 3615'}`),
+    '',
+    'Modules futurs:',
     '- notifications Nitro',
     '- raccourcis projets',
     '- messages du reseau',
-    '- acces aux apps compatibles',
+    '- apps compatibles',
     '',
     'Tape 7 pour revenir au portail Gwen.',
   ]);
 }
 
-export function renderGwenHaStarApps(config = {}) {
+export function renderGwenHaStarApps(config = {}, feed = {}) {
+  const apps = Array.isArray(feed.apps) ? feed.apps : [];
+  const appLines = apps.length
+    ? apps.flatMap((app, index) => [
+        line(`${index + 1}. ${app.name || app.id || 'App Nitro'}`),
+        line(`   ${app.status || 'unknown'} / ${app.terminalLabel || 'terminal'}`),
+      ])
+    : ['Aucune app Nitro declaree.'];
+
   return frame([
     ...renderHeader(config),
     '',
     'APPS NITRO',
     '',
-    'Selection d applications pouvant avoir',
-    'une facade texte Minitel:',
-    '',
-    '- BZH Chronicles',
-    '- TCG / Power Your Hand',
-    '- Jukebox / Chronicles FM',
-    '- Botanica',
-    '- Goetia / demons mapping',
+    ...appLines.slice(0, 12),
     '',
     'Chaque app doit fournir un resume court',
     'ou un endpoint adapte au terminal.',
@@ -85,23 +96,48 @@ export function renderGwenHaStarApps(config = {}) {
   ]);
 }
 
-export function renderGwenHaStarSignal(config = {}) {
+export function renderGwenHaStarSignal(config = {}, feed = {}) {
+  const signals = Array.isArray(feed.signals) ? feed.signals : [];
+
   return frame([
     ...renderHeader(config),
     '',
     'SIGNAL DU RESEAU',
     '',
-    'Nitro n est pas seulement un site:',
-    'c est une couche d identite pour les',
-    'projets Sterenna et les Chronicles.',
+    `FEED VERSION : ${feed.version ?? 'n/a'}`,
+    `MAJ          : ${feed.updatedAt || 'inconnue'}`,
+    '',
+    ...(signals.length ? signals.flatMap((signal) => wrap(`- ${signal}`, 40)) : ['- Aucun signal.']),
     '',
     'Version Minitel:',
     '- pas de CSS',
     '- pas de SPA moderne',
-    '- juste des ecrans courts',
-    '- navigation au clavier',
     '- donnees choisies et securisees',
     '',
     'Tape 7 pour revenir au portail Gwen.',
   ]);
+}
+
+function line(value, width = 40) {
+  return String(value).slice(0, width);
+}
+
+function wrap(value, width = 40) {
+  const words = String(value).split(/\s+/).filter(Boolean);
+  const lines = [];
+  let current = '';
+
+  for (const word of words) {
+    if (!current) {
+      current = word;
+    } else if (`${current} ${word}`.length <= width) {
+      current += ` ${word}`;
+    } else {
+      lines.push(current.slice(0, width));
+      current = word;
+    }
+  }
+
+  if (current) lines.push(current.slice(0, width));
+  return lines.length ? lines : [''];
 }
