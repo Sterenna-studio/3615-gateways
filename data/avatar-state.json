@@ -1,0 +1,58 @@
+{
+  "version": 1,
+  "updatedAt": "2026-06-22T00:00:00Z",
+  "avatar": {
+    "name": "LEMEGETON",
+    "status": "prototype",
+    "mode": "idle",
+    "mood": "neutral",
+    "eyes": "open",
+    "mouth": "closed",
+    "intensity": 0.2,
+    "renderer": "text-vdt-mvp"
+  },
+  "expressions": [
+    {
+      "id": "idle",
+      "label": "Repos",
+      "eyes": "open",
+      "mouth": "closed",
+      "note": "Visage neutre, clignements rares."
+    },
+    {
+      "id": "speaking",
+      "label": "Parole",
+      "eyes": "open",
+      "mouth": "medium",
+      "note": "Bouche alternee selon amplitude ou rythme texte."
+    },
+    {
+      "id": "listening",
+      "label": "Ecoute",
+      "eyes": "focused",
+      "mouth": "flat",
+      "note": "Regard attentif, peu de mouvement."
+    },
+    {
+      "id": "thinking",
+      "label": "Calcul",
+      "eyes": "up",
+      "mouth": "small",
+      "note": "Micro-glitchs et pause dramatique."
+    },
+    {
+      "id": "glitch",
+      "label": "Glitch",
+      "eyes": "offset",
+      "mouth": "wide",
+      "note": "Effet parasite court, retour au neutre."
+    }
+  ],
+  "pipeline": [
+    "Avatar state JSON",
+    "Terminal renderer 40 colonnes",
+    "Zones yeux/bouche/status",
+    "Diffs VDT apres tests hardware",
+    "Transport Telnet ou WebSocket"
+  ]
+}
