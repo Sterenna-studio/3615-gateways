@@ -1,0 +1,28 @@
+{
+  "name": "3615-gateways",
+  "version": "0.1.0",
+  "private": false,
+  "description": "3615 Gateways — Minitel ESP32 gateway, Telnet/WebSocket hub and Nitro portal integration",
+  "type": "module",
+  "main": "server/index.js",
+  "scripts": {
+    "start": "node server/index.js",
+    "dev": "node --watch server/index.js"
+  },
+  "keywords": [
+    "minitel",
+    "esp32",
+    "telnet",
+    "websocket",
+    "bbs",
+    "nitro",
+    "sterenna"
+  ],
+  "author": "Sterenna Studio",
+  "license": "UNLICENSED",
+  "dependencies": {
+    "dotenv": "^16.4.7",
+    "express": "^4.21.2",
+    "ws": "^8.18.0"
+  }
+}
