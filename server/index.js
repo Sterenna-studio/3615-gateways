@@ -18,6 +18,7 @@ import {
   renderGwenHaStarHome,
   renderGwenHaStarSignal,
 } from './lib/gwen-ha-star.js';
+import { loadNitroFeed } from './lib/nitro-feed.js';
 
 const config = {
   httpHost: process.env.HTTP_HOST || '0.0.0.0',
@@ -31,6 +32,7 @@ const config = {
   node: process.env.GATEWAY_NODE || 'ZYRA',
 };
 
+const nitroFeed = loadNitroFeed();
 const app = express();
 const server = http.createServer(app);
 const wss = new WebSocketServer({ noServer: true });
@@ -46,6 +48,7 @@ app.get('/', (_req, res) => {
     publicOrigin: config.publicOrigin,
     websocket: config.wsPath,
     telnetPort: config.telnetPort,
+    nitroFeedVersion: nitroFeed.version,
     wsClients: wsClients.size,
   });
 });
@@ -57,7 +60,15 @@ app.get('/minitel/status', (_req, res) => {
     node: config.node,
     mode: 'mvp',
     transports: ['telnet', 'websocket', 'http'],
+    nitroFeedVersion: nitroFeed.version,
     wsClients: wsClients.size,
+  });
+});
+
+app.get('/minitel/nitro-feed', (_req, res) => {
+  res.json({
+    ok: true,
+    feed: nitroFeed,
   });
 });
 
@@ -90,6 +101,7 @@ wss.on('connection', (ws, request) => {
     service: config.name,
     node: config.node,
     menu: renderMainMenu(config),
+    nitroFeedVersion: nitroFeed.version,
   }));
 
   ws.on('message', (payload) => {
@@ -157,15 +169,15 @@ function routeChoice(input) {
         clients: wsClients.size,
       });
     case '7':
-      return renderGwenHaStarHome(config);
+      return renderGwenHaStarHome(config, nitroFeed);
     case '71':
-      return renderGwenHaStarAgent(config);
+      return renderGwenHaStarAgent(config, nitroFeed);
     case '72':
-      return renderGwenHaStarCockpit(config);
+      return renderGwenHaStarCockpit(config, nitroFeed);
     case '73':
-      return renderGwenHaStarApps(config);
+      return renderGwenHaStarApps(config, nitroFeed);
     case '74':
-      return renderGwenHaStarSignal(config);
+      return renderGwenHaStarSignal(config, nitroFeed);
     default:
       return renderMainMenu(config);
   }
@@ -174,6 +186,7 @@ function routeChoice(input) {
 server.listen(config.httpPort, config.httpHost, () => {
   console.log(`[http] ${config.name} listening on http://${config.httpHost}:${config.httpPort}`);
   console.log(`[ws] path ${config.wsPath}`);
+  console.log(`[nitro-feed] version ${nitroFeed.version ?? 'n/a'}`);
 });
 
 telnetServer.listen(config.telnetPort, config.telnetHost, () => {
