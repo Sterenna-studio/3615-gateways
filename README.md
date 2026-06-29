@@ -2,6 +2,10 @@
 
 **3615 Gateways** is a retro-modern gateway project for connecting a real **Minitel** to contemporary services through an **ESP32**, Telnet/WebSocket, and the Nitro/Sterenna ecosystem.
 
+> Current active runtime: `MutenRock/Korigan/services/3615-gateways`.
+>
+> This repository remains the public standalone prototype, documentation base, and historical reference for the 3615 Gateways concept.
+
 The goal is simple:
 
 ```txt
@@ -9,7 +13,7 @@ Minitel
   -> ESP32 / iodeo Minitel-ESP32 / Telnet Pro
   -> Wi-Fi
   -> Zyra, the local Pop!_OS server
-  -> Nitro / Sterenna services
+  -> Korigan / Nitro / Sterenna services
 ```
 
 Public project page target:
@@ -29,12 +33,22 @@ telnet nitro.sterenna.fr 3615
 
 Early MVP skeleton, now with stateful terminal navigation, a local Nitro terminal feed, and a first Avatar / Lemegeton terminal module.
 
+The live development version is now integrated into Korigan:
+
+```txt
+Korigan
+└── services/3615-gateways/
+    ├── server/       # HTTP + WebSocket + Telnet runtime
+    ├── data/         # terminal-safe Nitro/avatar feeds
+    └── tests/        # router/feed/avatar tests
+```
+
 Current objective:
 
 1. run a local 3615 Gateways server on **Zyra**;
 2. connect the Minitel through the ESP32 using iodeo Telnet Pro;
 3. display a stable 3615 Gateways menu;
-4. expose Gwen Ha Star as a terminal-native section;
+4. expose Gwen Ha Star / Korigan as a terminal-native section;
 5. expose the Avatar / Lemegeton state as a terminal-native section;
 6. add services one by one: BBS, IA, Arcade, Terminal, BZH Chronicles.
 
@@ -46,7 +60,7 @@ Current objective:
 - Telnet server on port 3615
 - Stateful session per Telnet/WebSocket client
 - Main 3615 Gateways menu
-- Gwen Ha Star / Nitro terminal section
+- Gwen Ha Star / Korigan / Nitro terminal section
 - Avatar / Lemegeton terminal section
 - Local terminal-safe Nitro feed
 - Local terminal-safe avatar state feed
@@ -98,153 +112,25 @@ Current objective:
 
 ## Quick start on Zyra
 
-Requirements:
-
-- Node.js 20+
-- npm
-- access to the Minitel ESP32 device through the same network
+For the current integrated runtime, prefer cloning Korigan and running the service from `services/3615-gateways`.
 
 ```bash
-git clone https://github.com/Sterenna-studio/3615-gateways.git
-cd 3615-gateways
+git clone git@github.com:MutenRock/Korigan.git
+cd Korigan/services/3615-gateways
 cp .env.example .env
 npm install
 npm run dev
 ```
 
-Default local endpoints:
+Default local endpoints used in the current Korigan setup:
 
 ```txt
-HTTP status:       http://localhost:8080/
-Status detail:     http://localhost:8080/minitel/status
-Nitro feed:        http://localhost:8080/minitel/nitro-feed
-Avatar state:      http://localhost:8080/minitel/avatar-state
-WebSocket:         ws://localhost:8080/minitel/ws
+HTTP status:       http://localhost:8085/
+Status detail:     http://localhost:8085/minitel/status
+Nitro feed:        http://localhost:8085/minitel/nitro-feed
+Avatar state:      http://localhost:8085/minitel/avatar-state
+WebSocket:         ws://localhost:8085/minitel/ws
 Telnet:            localhost:3615
 ```
 
-From another machine on the LAN:
-
-```txt
-telnet <ZYRA_LOCAL_IP> 3615
-```
-
-## Tests
-
-```bash
-npm test
-```
-
-## Minitel navigation
-
-Main menu:
-
-```txt
-[1] MESSAGE DU SERVEUR
-[2] BZH CHRONICLES
-[3] BBS / RETRO SERVICES
-[4] ARCADE
-[5] TERMINAL TEST
-[6] INFOS SYSTEME
-[7] GWEN HA STAR / NITRO
-[8] AVATAR / LEMEGETON
-[?] AIDE
-[0] ACCUEIL / RAFRAICHIR
-```
-
-Inside Gwen Ha Star:
-
-```txt
-[71] CARTE AGENT / CIG
-[72] STAR COCKPIT
-[73] APPS NITRO
-[74] SIGNAL DU RESEAU
-```
-
-Inside Avatar / Lemegeton:
-
-```txt
-[81] ETAT AVATAR
-[82] EXPRESSIONS
-[83] PIPELINE VDT
-[84] TEST YEUX/BOUCHE
-```
-
-The router is contextual:
-
-```txt
-Inside Gwen Ha Star:      1,2,3,4 -> 71,72,73,74
-Inside Avatar/Lemegeton:  1,2,3,4 -> 81,82,83,84
-```
-
-## ESP32 / Telnet Pro preset
-
-Recommended first preset:
-
-```txt
-Name: 3615 Gateways Local
-Type: Telnet
-Host: <ZYRA_LOCAL_IP>
-Port: 3615
-Scroll: true
-Echo: false
-```
-
-Then, once `nitro.sterenna.fr` is proxied to Zyra:
-
-```txt
-Name: 3615 Gateways Nitro
-Type: Telnet
-Host: nitro.sterenna.fr
-Port: 3615
-Scroll: true
-Echo: false
-```
-
-For WebSocket mode:
-
-```txt
-Name: 3615 Gateways WS
-Type: WebSocket
-URL: wss://nitro.sterenna.fr/minitel/ws
-Ping: 30000
-Scroll: true
-Echo: false
-```
-
-## Design principle
-
-Do not make the Minitel pretend to be a modern web browser.
-
-The public web page and the Minitel service are separate:
-
-```txt
-https://nitro.sterenna.fr/minitel/
-  = public project page for modern browsers
-
-wss://nitro.sterenna.fr/minitel/ws
-  = WebSocket channel for ESP32 / tools
-
-telnet nitro.sterenna.fr 3615
-  = retro terminal / BBS entrypoint
-```
-
-For avatar rendering, do not convert video frames directly to the Minitel. Use terminal-native state + small display updates.
-
-## Security principle
-
-3615 Gateways must never expose raw shell access, private tokens, Home Assistant admin APIs, or system commands directly to public clients.
-
-Expose one controlled gateway, log connections, add authentication when moving from LAN to public access, and isolate Zyra services behind a reverse proxy or tunnel.
-
-## Related projects
-
-- iodeo Minitel-ESP32
-- iodeo Socketel
-- iodeo Minitel-Play
-- sblendorio PETSCII-BBS
-- Sterenna Nitro / Gwen Ha Star static hub
-
-## License
-
-To be defined.
+The standalone version in this repository can still be used for experimentation, documentation, and public sharing, but the active local cockpit should point to Korigan.
